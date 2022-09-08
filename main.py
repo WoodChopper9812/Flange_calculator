@@ -23,7 +23,6 @@ for item in class_reader:
         bolts_class.append([str(item[0]), int(item[1])])
     except ValueError:
         pass
-    print(item)
 
 
 # Define Calculation Conditions
