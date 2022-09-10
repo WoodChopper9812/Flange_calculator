@@ -1,53 +1,125 @@
 import csv
 import math
+import warnings
 
 # Import bolt list
-f = open('Bolts.csv', 'r')
-reader = csv.reader(f)
-bolts = []
+#f = open('Bolts.csv', 'r')
+#reader = csv.reader(f)
+#bolts = []
 
-g = open('Bolts_class.csv', 'r')
-class_reader = csv.reader(g)
-bolts_class = []
+#g = open('Bolts_class.csv', 'r')
+#class_reader = csv.reader(g)
+#bolts_class = []
 
 # Check bolt importation
-for row in reader:
-    try:
-        bolts.append([row[0], float(row[1]), float(row[2]), float(row[3]), float(row[4]), float(row[5])])
-    except ValueError:
-        pass
+#for row in reader:
+#    try:
+#        bolts.append([row[0], float(row[1]), float(row[2]), float(row[3]), float(row[4]), float(row[5])])
+#    except ValueError:
+#        pass
 
 
-for item in class_reader:
-    try:
-        bolts_class.append([str(item[0]), int(item[1])])
-    except ValueError:
-        pass
+#for item in class_reader:
+#    try:
+#        bolts_class.append([str(item[0]), int(item[1])])
+#    except ValueError:
+#        pass
 
+def extractValues(array, index=0):
+    '''
+    Exctracts values from specific indexes from list's subararray.
+    Arguments:
+    -> array ([[...], ...]) - 2D array
+    -> index (int) - index of values exctracted from subarrays
+    Returns:
+    -> array ([...]) - list of required values from arrays
+    Raises:
+    -> None.
+    '''
+    return [item[index] for item in array]
 
-# Define Calculation Conditions
+def loadDatabase(boltsFileName="Bolts.csv", boltClassFileName="Bolts_class.csv", lessInfo=True):
+    '''
+    Loads all required databases and returns
+    them in form of lists.
+    Arguments:
+    -> boltsFileName (string) - name of the bolts database file,
+    -> boltClassFileName (string) - name of the bolt classes file,
+    -> lessInfo (bool) - debugging messages flag. Prints messages if False
+    Returns:
+    -> bolts ([[string, float, ...], ...]) - array of available bolt names
+    -> bolts_class ([[string, float], ...]) - array of available bolt classes
+    Raises:
+    -> warnings - if a ValueError appears during file loading and lessInfo flag is set to False
+    -> exception:
+        - if other error is encountered during file loading
+        - if a wrong variable type is provided as arguments
+    '''
+    # returnable arrays
+    bolts = []
+    bolts_class = []
+    # checking provided names
+    if(not isinstance(boltsFileName, str)):
+        raise Exception(f"Wrong type of boltsFileName. Expected str, got {type(boltsFileName)}")
+    if(not isinstance(boltClassFileName, str)):
+        raise Exception(f"Wrong type of boltClassFileName. Expected str, got {type(boltClassFileName)}")
+    # Files to download the databases from
+    f = open(boltsFileName, 'r')
+    g = open(boltClassFileName, 'r')
+    if(f==None or g==None):
+        raise Exception("An error occured while loading database files")
+    # File streams to databases
+    reader = csv.reader(f)
+    class_reader = csv.reader(g)
+    
+    # loading bolt names
+    if(not lessInfo):
+        print("Loading bolt database")
+    for linenum, row in enumerate(reader):
+        try:
+            for num, item in enumerate(row):
+                if (num==0):
+                    bolts.append([row[num]])
+                else:
+                    bolts[-1].append(float(row[num]))
+        except ValueError:
+            if(not lessInfo):
+                warnings.warn(f"[Bolts] Could not load a value from line {linenum}")
+    # loading bolt classes
+    print("Loading bolt class database")
+    for linenum, row in enumerate(class_reader):
+        try:
+            bolts_class.append([str(row[0]), int(row[1])])
+        except ValueError:
+            warnings.warn(f"[Bolt class] Could not load a value from line {linenum}")
+        except:
+            raise Exception(f"[Bolt class] Could not load database file. Error @ {linenum}.")
+    # closing files
+    f.close()
+    g.close()
+    
+    #returning arrays
+    return bolts, bolts_class
 
-while True:
+def getVariable(message, vartype, nonNegative = False):
+    var = vartype(0)
+    while True:
+        try:
+            var = vartype(input(message))
+            if var <= 0 and nonNegative:
+                print('Negative value or zero \n')
+            else:
+                break
+        except ValueError:
+            print('Wrong value \n')
+    return var
+
+def main():
+    bolts, bolts_class = loadDatabase(lessInfo=False)
     # Tank
-    while True:
-        try:
-            tank_diameter = float(input('Enter tank diameter: \n'))
-            if tank_diameter <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            tank_Young_modulus = float(input('Enter tank Young modulus [MPa]: \n'))
-            if tank_Young_modulus <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
+    
+    tank_diameter = getVariable("Enter tank diameter:\n", float, nonNegative=True)
+    tank_Young_modulus = getVariable("Enter tank Young modulus [MPa]:\n", float, nonNegative=True)
 
     # Bolts
 
@@ -56,7 +128,7 @@ while True:
     while True:
         try:
             bolt_size = str(input('Enter bolt size (example: M4, M8x1, M10...): \n'))
-            if any([item[0] == bolt_size for item in bolts]):
+            if (bolt_size in extractValues(bolts)):
                 break
             else:
                 print('Sorry, I don\'t have this bolt. \n')
@@ -67,19 +139,15 @@ while True:
 
     # Assign bolt parameters
 
-
-    for row in bolts:
-        if row[0] == bolt_size:
-            print('Matching thread found! \n')
-            thread_name = row[0]
-            thread_diameter = row[1]
-            pitch = row[2]
-            pitch_diameter = row[3]
-            core_diameter = row[4]
-            bolt_hole = row[5]
-        else:
-            pass
-
+    linenum=extractValues(bolts, 0).index(bolt_size, 0)
+    print('Matching thread found! \n')
+    thread_name = bolts[linenum][0]
+    thread_diameter = bolts[linenum][1]
+    pitch = bolts[linenum][2]
+    pitch_diameter = bolts[linenum][3]
+    core_diameter = bolts[linenum][4]
+    bolt_hole = bolts[linenum][5]
+    
     print('Thread name: ' + thread_name)
     print('Thread diameter: ' + str(thread_diameter) + ' [mm]')
     print('Thread pitch: ' + str(pitch) + ' [mm]')
@@ -88,11 +156,10 @@ while True:
     print('Bolt hole: ' + str(bolt_hole) + ' [mm] \n')
 
     bolt_class = str
-
     while True:
         try:
-            bolt_class = str(input('Enter bolt clas (example: 5.6, 6.8, 10.9...): \n'))
-            if any([item[0] == bolt_class for item in bolts_class]):
+            bolt_class = input('Enter bolt clas (example: 5.6, 6.8, 10.9...): \n')
+            if bolt_class in extractValues(bolts_class, 0):
                 break
             else:
                 print('Sorry, I don\'t have this bolt class. \n')
@@ -100,98 +167,33 @@ while True:
             print('Sorry, I don\'t have this bolt class. \n')
             break
 
-    for row in bolts_class:
-        if row[0] == bolt_class:
-            print('Matching class found! \n')
-            bolt_class = row[0]
-            R_e = row[1]
-        else:
-            pass
+    linenum = extractValues(bolts_class, 0).index(bolt_class)
+    print('Matching class found! \n')
+    bolt_class = bolts_class[linenum][0]
+    R_e = bolts_class[linenum][1]
 
-    print('Bolt class: ' + str(bolt_class))
-    print('Yield strength: ' + str(R_e) + ' [MPa]')
+    print(f'Bolt class: {bolt_class}')
+    print(f'Yield strength: {str(R_e)} [MPa]')
 
-    while True:
-        try:
-            bolt_number = int(input('Enter number of bolts: \n'))
-            if bolt_number <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            bolt_length = float(input('Enter bolt length: \n'))
-            if bolt_length <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            bolt_Young_modulus = float(input('Enter bolt Young modulus [MPa]: \n'))
-            if bolt_Young_modulus <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
+    bolt_number = getVariable("Enter number of bolts:\n", int, nonNegative=True)
+    bolt_length = getVariable("Enter bolt length:\n", float, nonNegative=True)
+    bolt_Young_modulus = getVariable("Enter bolt Young modulus [MPa]:\n", float, nonNegative=True)
 
     # Seal
-
-    while True:
-        try:
-            seal_outer_diameter = float(input('Enter outer diameter of seal: \n'))
-            break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            seal_inner_diameter = float(input('Enter inner diameter of seal: \n'))
-            if seal_inner_diameter > seal_outer_diameter:
-                print('Inner diameter can\'t be bigger than outer \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            seal_active_width = float(input('Enter active width of seal: \n'))
-            break
-        except ValueError:
-            print('Wrong value \n')
+    # ba-da-da, ba-da-da-da-da-da-da...
+    seal_outer_diameter = getVariable("Enter outer diameter of seal:\n", float, False)
+    # There used to be a greying tower alone on the sea...
+    seal_inner_diameter = getVariable("Enter inner diameter of seal:\n", float, False)
+    while(seal_inner_diameter>seal_outer_diameter):
+        print("Seal inner diameter can't be bigger than the outer one!")
+        seal_inner_diameter = getVariable("Enter inner diameter of seal:\n", float, False)
+    # You became the ligh on the dark side of me
+    seal_active_width = getVariable("Enter active width of seal:\n", float, False)
 
     # Operating Conditions
-
-    while True:
-        try:
-            pressure = float(input('Enter pressure in tank [bar]: \n'))
-            if pressure < 0:
-                print('Negative value \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    while True:
-        try:
-            safety_factor = float(input('Enter safety factor: \n'))
-            if safety_factor <= 0:
-                print('Negative value or zero \n')
-            else:
-                break
-        except ValueError:
-            print('Wrong value \n')
-
-    # Bolts file closed
-    f.close()
-    g.close()
+    
+    pressure = getVariable("Enter pressure in tank [bar]:\n", float, True)
+    safety_factor = getVariable("Enter safety factor:\n", float, True)
 
     # Forces acting on bolt
     F_pressure = math.pi * pressure * 101325 * (tank_diameter / 2000) ** 2
@@ -210,27 +212,30 @@ while True:
 
     c_s = (math.pi * core_diameter **2 * bolt_Young_modulus) / (4 * bolt_length)
 
-    print('Bolt stiffness: ' + str(format(c_s, '.2f')) + ' [N/mm]')
+    
 
         #flange stiffnes
 
     # tg_zeta = 0.5
     S = 1.4158 * thread_diameter + 1.5798
 
-    c_k = (2 / (math.pi * tank_Young_modulus * bolt_hole * 0.5)) * math.log((S + bolt_hole) * (S + (bolt_length * 0.5) - bolt_hole) / ((S - bolt_hole) * (S + (bolt_length * 0.5) + bolt_hole)),math.e)
-
-    print('Flange stiffness: ' + str(format(c_k, '.10f')) + ' [mm/N]')
+    c_k = (
+            (2 / (math.pi * tank_Young_modulus * bolt_hole * 0.5)) *
+            math.log((S + bolt_hole) * 
+            (S + (bolt_length * 0.5) - bolt_hole) / 
+            ((S - bolt_hole) * (S + (bolt_length * 0.5) + bolt_hole)),math.e)
+        )
 
     Q_p = ((F_on_bolt * safety_factor) / bolt_number)
 
-    print('Force on single bolt from inside pressure: ' + str(format(F_on_bolt, '.2f')) + ' [N]')
-
     Q_w = (1.25 * Q_p) / (1 + (c_s * c_k))  # preload in bolt (1,25 - 2,5)
 
-    print('Preload on bolt: ' + str(format(Q_w, '.2f')) + ' [N]')
-
     Q = (0.2 * Q_w) + Q_p  # full force in bolt (0,2 - 0,6)
-
+    
+    print('Bolt stiffness: ' + str(format(c_s, '.2f')) + ' [N/mm]')
+    print('Flange stiffness: ' + str(format(c_k, '.10f')) + ' [mm/N]')
+    print('Force on single bolt from inside pressure: ' + str(format(F_on_bolt, '.2f')) + ' [N]')
+    print('Preload on bolt: ' + str(format(Q_w, '.2f')) + ' [N]')
     print('Full force in bolt: ' + str(format(Q, '.2f')) + ' [N]')
 
 
@@ -266,3 +271,9 @@ while True:
     safety_factor_cal = (R_e / sigma) * safety_factor
 
     print('Safety factor calculated: ' + str(format(safety_factor_cal, '.2f')) + '\n')
+
+
+# Define Calculation Conditions
+if __name__=="__main__":
+    while True:
+        main()    
