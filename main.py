@@ -148,7 +148,7 @@ class sft():
         return bolt_size
 
     def iterateByXY(self, numberOfBolts, BoltSizeIndex):
-        return self.main(bolt_index=BoltSizeIndex, bolt_number=numberOfBolts)
+        return self.main(bolt_number=numberOfBolts, bolt_index=BoltSizeIndex)
 
     def main(self, bolts = None, bolts_class = None, lessInfo = True, **kwargs):
         bolt_index = None
@@ -359,7 +359,7 @@ if __name__=="__main__":
     fig = plt.figure(figsize=(35./5., 30./5.), dpi = 1920/35*5)
     ax = fig.add_subplot(111)
 
-    x_tab = np.linspace(3, 30, num=28, dtype=int)
+    x_tab = np.linspace(3, 2000, num=28, dtype=int)
     y_tab = np.linspace(1, len(mn.extractValues(mn.bolts))-1, len(mn.extractValues(mn.bolts))-1, dtype=int)
     tb = np.zeros((len(x_tab)*len(y_tab), 3))
     for i in range(len(x_tab)):
