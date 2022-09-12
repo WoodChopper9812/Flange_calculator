@@ -2,28 +2,6 @@ import csv
 import math
 import warnings
 
-# Import bolt list
-#f = open('Bolts.csv', 'r')
-#reader = csv.reader(f)
-#bolts = []
-
-#g = open('Bolts_class.csv', 'r')
-#class_reader = csv.reader(g)
-#bolts_class = []
-
-# Check bolt importation
-#for row in reader:
-#    try:
-#        bolts.append([row[0], float(row[1]), float(row[2]), float(row[3]), float(row[4]), float(row[5])])
-#    except ValueError:
-#        pass
-
-
-#for item in class_reader:
-#    try:
-#        bolts_class.append([str(item[0]), int(item[1])])
-#    except ValueError:
-#        pass
 
 def extractValues(array, index=0):
     '''
@@ -127,13 +105,13 @@ def main():
 
     while True:
         try:
-            bolt_size = str(input('Enter bolt size (example: M4, M8x1, M10...): \n'))
+            bolt_size = str(input("Enter bolt size (example: M4, M8x1, M10...): \n"))
             if (bolt_size in extractValues(bolts)):
                 break
             else:
-                print('Sorry, I don\'t have this bolt. \n')
+                print("Sorry, I don't have this bolt. \n")
         except ValueError:
-            print('Sorry, I don\'t have this bolt. \n')
+            print("Sorry, I don't have this bolt. \n")
             break
 
 
@@ -184,11 +162,14 @@ def main():
     seal_outer_diameter = getVariable("Enter outer diameter of seal:\n", float, False)
     # There used to be a greying tower alone on the sea...
     seal_inner_diameter = getVariable("Enter inner diameter of seal:\n", float, False)
-    while(seal_inner_diameter>seal_outer_diameter):
+    while(seal_inner_diameter>seal_outer_diameter or seal_inner_diameter<tank_diameter):
         print("Seal inner diameter can't be bigger than the outer one!")
         seal_inner_diameter = getVariable("Enter inner diameter of seal:\n", float, False)
-    # You became the ligh on the dark side of me
-    seal_active_width = getVariable("Enter active width of seal:\n", float, False)
+    # You became the light on the dark side of me
+    seal_active_width = getVariable("Enter active width of seal:\n", float, True)
+    while (seal_active_width>((seal_outer_diameter-seal_inner_diameter)/2)):
+        print("Seal active width can't be bigger than seal with!")
+        seal_active_width = getVariable("Enter active width of seal:\n", float, True)
 
     # Operating Conditions
     
@@ -228,9 +209,9 @@ def main():
 
     Q_p = ((F_on_bolt * safety_factor) / bolt_number)
 
-    Q_w = (1.25 * Q_p) / (1 + (c_s * c_k))  # preload in bolt (1,25 - 2,5)
+    Q_w = (1.25 * Q_p) / (1 + (c_s * c_k))  # preload in bolt (1.25 - 2.5)
 
-    Q = (0.2 * Q_w) + Q_p  # full force in bolt (0,2 - 0,6)
+    Q = (0.2 * Q_w) + Q_p  # full force in bolt (0.2 - 0.6)
     
     print('Bolt stiffness: ' + str(format(c_s, '.2f')) + ' [N/mm]')
     print('Flange stiffness: ' + str(format(c_k, '.10f')) + ' [mm/N]')
