@@ -38,7 +38,7 @@ class sft():
         '''
         return [item[index] for item in array]
 
-    def loadDatabase(self, boltsFileName="Bolts.csv", boltClassFileName="Bolts_class.csv", lessInfo=True):
+    def loadDatabase(self, threadsFileName="threads_list.csv", boltClassFileName="bolts_class.csv", lessInfo=True):
         '''
         Loads all required databases and returns
         them in form of lists.
@@ -59,12 +59,12 @@ class sft():
         bolts = []
         bolts_class = []
         # checking provided names
-        if(not isinstance(boltsFileName, str)):
-            raise Exception(f"Wrong type of boltsFileName. Expected str, got {type(boltsFileName)}")
+        if(not isinstance(threadsFileName, str)):
+            raise Exception(f"Wrong type of threadsFileName. Expected str, got {type(threadsFileName)}")
         if(not isinstance(boltClassFileName, str)):
             raise Exception(f"Wrong type of boltClassFileName. Expected str, got {type(boltClassFileName)}")
         # Files to download the databases from
-        f = open(boltsFileName, 'r')
+        f = open(threadsFileName, 'r')
         g = open(boltClassFileName, 'r')
         if(f==None or g==None):
             raise Exception("An error occured while loading database files")
@@ -74,7 +74,7 @@ class sft():
         
         # loading bolt names
         if(not lessInfo):
-            print("Loading bolt database")
+            print("Loading threads database")
         for linenum, row in enumerate(reader):
             try:
                 for num, item in enumerate(row):
@@ -84,7 +84,7 @@ class sft():
                         bolts[-1].append(float(row[num]))
             except ValueError:
                 if(not lessInfo):
-                    warnings.warn(f"[Bolts] Could not load a value from line {linenum}")
+                    warnings.warn(f"[Threads] Could not load a value from line {linenum}")
         # loading bolt classes
         print("Loading bolt class database")
         for linenum, row in enumerate(class_reader):
@@ -107,14 +107,14 @@ class sft():
             try:
                 var = vartype(input(message))
                 if var < 0 and nonNegative:
-                    print('Negative value\n')
+                    print("Negative value\n")
                 else:
                     if(var==0 and nonZero):
                         print("Value cannot be zero\n")
                     else:
                         break
             except ValueError:
-                print('Wrong value \n')
+                print("Wrong value \n")
         return var
 
     def lookUpValue(self, name, kwargs, text="", vartype=float, nonNegative=True, nonZero=False):
@@ -128,14 +128,14 @@ class sft():
                 if(mode=="size"):
                     bolt_size = str(input("Enter bolt size (example: M4, M8x1, M10...): \n"))
                 if(mode=="class"):
-                    bolt_size = input('Enter bolt clas (example: 5.6, 6.8, 10.9...): \n')
+                    bolt_size = input("Enter bolt clas (example: 5.6, 6.8, 10.9...): \n")
                 if (bolt_size in self.extractValues(bolts)):
                     break
                 else:
                     if(mode=="size"):
                         print("Sorry, I don't have this bolt. \n")
                     if(mode=="class"):
-                        print('Sorry, I don\'t have this bolt class. \n')
+                        print("Sorry, I don\'t have this bolt class. \n")
                     bolt_size=None
             else:
                 if(mode=="size"):
@@ -184,20 +184,21 @@ class sft():
 
         # Assign bolt parameters
         linenum=self.extractValues(bolts, 0).index(self.bolt_size, 0)
-        print('Matching thread found! \n')
+        print("Matching thread found! \n")
         thread_name = bolts[linenum][0]
         thread_diameter = bolts[linenum][1]
         pitch = bolts[linenum][2]
         pitch_diameter = bolts[linenum][3]
         core_diameter = bolts[linenum][4]
         bolt_hole = bolts[linenum][5]
-        
-        print('Thread name: ' + thread_name)
-        print('Thread diameter: ' + str(thread_diameter) + ' [mm]')
-        print('Thread pitch: ' + str(pitch) + ' [mm]')
-        print('Thread pitch diameter: ' + str(pitch_diameter) + ' [mm]')
-        print('Thread core diameter: ' + str(core_diameter) + ' [mm]')
-        print('Bolt hole: ' + str(bolt_hole) + ' [mm] \n')
+
+        #(f"Could not find specified bolt class: {bolt_size}")
+        print(f"Thread name: {thread_name}")
+        print(f"Thread diameter: {thread_diameter} [mm]")
+        print(f"Thread pitch: {pitch} [mm]")
+        print(f"Thread pitch diameter: {pitch_diameter} [mm]")
+        print(f"Thread core diameter: {core_diameter} [mm]")
+        print(f"Bolt hole: {bolt_hole} [mm] \n")
 
         if(self.bolt_class==None):
             if("bolt_class" in kwargs):
@@ -206,12 +207,12 @@ class sft():
                 self.bolt_class = self.findBoltSize(bolts_class, mode="class")
 
         linenum = self.extractValues(bolts_class, 0).index(self.bolt_class)
-        print('Matching class found! \n')
+        print("Matching class found! \n")
         self.bolt_class = bolts_class[linenum][0]
         R_e = bolts_class[linenum][1]
 
-        print(f'Bolt class: {self.bolt_class}')
-        print(f'Yield strength: {str(R_e)} [MPa]\n')
+        print(f"Bolt class: {self.bolt_class}")
+        print(f"Yield strength: {str(R_e)} [MPa]\n")
 
         if(self.bolt_number==None):
             self.bolt_number = self.lookUpValue("bolt_number", kwargs, "Enter number of bolts:\n", int, nonNegative=True, nonZero=True)
@@ -259,10 +260,6 @@ class sft():
         F_residual = math.pi * ((self.seal_inner_diameter + self.seal_inner_diameter) / 2) * self.seal_active_width * (self.pressure / 10)
         F_on_bolt = F_residual + F_pressure
 
-        print('Force from pressure: ' + str(format(F_pressure, '.2f')) + ' [N]')
-        print('Force from residual tension: ' + str(format(F_residual, '.2f')) + ' [N]')
-        print('Force acting on bolts: ' + str(format(F_on_bolt, '.2f')) + ' [N]')
-
         # Force in bolt and Preload on bolt
 
         # Source Mazanek
@@ -270,8 +267,6 @@ class sft():
             #bolt stiffnes
 
         c_s = (math.pi * core_diameter **2 * self.bolt_Young_modulus) / (4 * self.bolt_length)
-
-        
 
             #flange stiffnes
 
@@ -290,12 +285,6 @@ class sft():
         Q_w = (1.25 * Q_p) / (1 + (c_s * c_k))  # preload in bolt (1.25 - 2.5)
 
         Q = (0.2 * Q_w) + Q_p  # full force in bolt (0.2 - 0.6)
-        
-        print('Bolt stiffness: ' + str(format(c_s, '.2f')) + ' [N/mm]')
-        print('Flange stiffness: ' + str(format(c_k, '.10f')) + ' [mm/N]')
-        print('Force on single bolt from inside pressure: ' + str(format(F_on_bolt, '.2f')) + ' [N]')
-        print('Preload on bolt: ' + str(format(Q_w, '.2f')) + ' [N]')
-        print('Full force in bolt: ' + str(format(Q, '.2f')) + ' [N]')
 
 
 
@@ -314,7 +303,6 @@ class sft():
 
         Torque = F_on_bolt * ((pitch / (2 * math.pi)) + ((mi_t * r_t) / math.cos(beta_rad)) + (mi_n * r_n))  # N*mm
 
-        print('Torque required on bolt: ' + str(format(Torque / 1000, '.2f')) + ' [Nm]')
 
         # Stress in bolt
 
@@ -323,13 +311,26 @@ class sft():
         tau = (M_t * (16 / (math.pi * (core_diameter ** 3)))) ** 2
         sigma = math.sqrt(sigma_r + 3 * tau)
 
-        print('Stress in bolt: ' + str(format(sigma, '.2f')) + ' [MPa]')
 
         # Safety factor
 
         safety_factor_cal = (R_e / sigma) * self.safety_factor
 
-        print('Safety factor calculated: ' + str(format(safety_factor_cal, '.2f')) + '\n')
+        # Printing final values
+
+        print(f"Force from pressure: {format(F_pressure, '.2f')} [N]")
+        print(f"Force from residual tension: {format(F_residual, '.2f')} [N]")
+        print(f"Force acting on bolts: {format(F_on_bolt, '.2f')} [N]")
+
+        print(f"Bolt stiffness: {format(c_s, '.2f')} [N/mm]")
+        print(f"Flange stiffness: {format(c_k, '.10f')} [mm/N]")
+        print(f"Force on single bolt from inside pressure: {format(F_on_bolt, '.2f')} [N]")
+        print(f"Preload on bolt: {format(Q_w, '.2f')} [N]")
+        print(f"Full force in bolt: {format(Q, '.2f')} [N]")
+
+        print(f"Torque required on bolt: {format(Torque / 1000, '.2f')} [Nm]")
+        print(f"Stress in bolt: {format(sigma, '.2f')} [MPa]")
+        print(f"Safety factor calculated: {format(safety_factor_cal, '.2f')} \n")
 
         return safety_factor_cal
 
