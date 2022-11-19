@@ -237,7 +237,8 @@ class sft():
                 raise Exception("Wrong seal inner diameter!")
             self.seal_inner_diameter = self.getVariable("Enter inner diameter of seal:\n", float, True)
         # You became the light on the dark side of me
-        if(not self.seal_outer_diameter==0 and self.seal_active_diameter==None):
+
+        if(not self.seal_outer_diameter==0 and self.seal_active_width==None):
             self.seal_active_width = self.lookUpValue("seal_active_width", kwargs, "Enter active width of seal:\n", float, True)
         else:
             if(self.seal_active_width==None):
@@ -258,7 +259,7 @@ class sft():
         # Forces acting on bolt
         F_pressure = math.pi * self.pressure * 101325 * (self.tank_diameter / 2000) ** 2
         F_residual = math.pi * ((self.seal_inner_diameter + self.seal_inner_diameter) / 2) * self.seal_active_width * (self.pressure / 10)
-        F_on_bolt = F_residual + F_pressure
+        F_on_bolts = F_residual + F_pressure
 
         # Force in bolt and Preload on bolt
 
@@ -280,7 +281,7 @@ class sft():
                 ((S - bolt_hole) * (S + (self.bolt_length * 0.5) + bolt_hole)),math.e)
             )
 
-        Q_p = ((F_on_bolt * self.safety_factor) / self.bolt_number)
+        Q_p = ((F_on_bolts * self.safety_factor) / self.bolt_number)
 
         Q_w = (1.25 * Q_p) / (1 + (c_s * c_k))  # preload in bolt (1.25 - 2.5)
 
@@ -301,7 +302,7 @@ class sft():
         # Source "AN INTRODUCTION TO THE DESIGN AND BEHAVIOR OF BOLTED JOINTS THIRD EDITION,REVISED AND EXPANDED"
         # John H. Bickford
 
-        Torque = F_on_bolt * ((pitch / (2 * math.pi)) + ((mi_t * r_t) / math.cos(beta_rad)) + (mi_n * r_n))  # N*mm
+        Torque = F_on_bolts * ((pitch / (2 * math.pi)) + ((mi_t * r_t) / math.cos(beta_rad)) + (mi_n * r_n))  # N*mm
 
 
         # Stress in bolt
@@ -320,11 +321,11 @@ class sft():
 
         print(f"Force from pressure: {format(F_pressure, '.2f')} [N]")
         print(f"Force from residual tension: {format(F_residual, '.2f')} [N]")
-        print(f"Force acting on bolts: {format(F_on_bolt, '.2f')} [N]")
+        print(f"Force acting on bolts: {format(F_on_bolts, '.2f')} [N]")
 
         print(f"Bolt stiffness: {format(c_s, '.2f')} [N/mm]")
         print(f"Flange stiffness: {format(c_k, '.10f')} [mm/N]")
-        print(f"Force on single bolt from inside pressure: {format(F_on_bolt, '.2f')} [N]")
+        print(f"Force on single bolt from inside pressure: {format(Q_p, '.2f')} [N]")
         print(f"Preload on bolt: {format(Q_w, '.2f')} [N]")
         print(f"Full force in bolt: {format(Q, '.2f')} [N]")
 
@@ -356,7 +357,7 @@ if __name__=="__main__":
     #                safety_factor=mn.safety_factor,
     #                lessInfo=False
     #            )
-    
+    '''
     fig = plt.figure(figsize=(35./5., 30./5.), dpi = 1920/35*5)
     ax = fig.add_subplot(111)
 
@@ -370,4 +371,4 @@ if __name__=="__main__":
             tb[i*len(y_tab)+o, 2] = mn.iterateByXY(x_tab[i], y_tab[o])
     cont = ax.tricontourf(tb[:,0], tb[:,1], tb[:,2], cmap='jet', levels=np.linspace(np.min(tb[:, 2]), np.max(tb[:, 2]), num=1000))
     plt.show()
-    
+'''
